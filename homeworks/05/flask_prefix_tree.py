@@ -58,19 +58,23 @@ class PrefixTree:
             else:
                 break
 
-        if len(wrk_dict) != 0:
-            top.append(string, wrk_dict[1], wrk_dict[2])
+        def rec_sug(array, string, wrk_dict):
+            for i in wrk_dict[0].keys():
+                if len(wrk_dict[0][i][0]) > 0:
+                    rec_sug(array, string + i, wrk_dict[0][i])
+                if len(wrk_dict[0][i]) != 1:
+                    string = string + i
+                    line = [string, wrk_dict[0][i][2], wrk_dict[0][i][1]]
+                    array.append(line)
 
-        def rec(t, wrk_d, st):
-            for i in wrk_d[0]:
-                st += i
-                if len(wrk_dict[0][i]) != 0:
-                    t.append(st, wrk_d[1], wrk_d[2])
-                if len(wrk_d[0][i][0]) != 0:
-                    rec(t, wrk_d[0][i], st)
+        top = []
+        rec_sug(top, string, wrk_dict)
+        top.sort(key=lambda x: int(x[2]), reverse=True)
 
-        rec(top, wrk_dict, string)
-        return top.sort(key=lambda x: x[1], reverse=True)[:n]
+        for i in range(len(top)):
+            top[i] = top[i][:2]
+
+        return top
 
     """
         TODO реализация класса prefix tree, методы как на лекции + метод дать топ 10 продолжений.
@@ -82,36 +86,37 @@ class PrefixTree:
 
 
 def init_prefix_tree(filename):
-    prefix_tree = PrefixTree()
+    p_t = PrefixTree()
     ar_to_el = []
 
     with open("./"+filename, "r") as file:
         for line in file:
-            l = [i for i in line.split("\t")]
-            ar_to_el.append(l)
+            lin = [i for i in line.split("\t")]
+            for i in range(len(lin)):
+                lin[i] = lin[i].strip()
+            ar_to_el.append(lin)
 
     for line in ar_to_el:
-        prefix_tree.add(line[0], line[1], line[2])
+        p_t.add(line[0], line[1], line[2])
 
-    return prefix_tree
+    return p_t
 
-    """
-    TODO в данном методе загружаем данные из файла.
-    Предположим вормат файла
+
+"""
+TODO в данном методе загружаем данные из файла.
+Предположим вормат файла
                               "Строка, чтобы положить в дерево" \t
                               "json значение для ноды" \t
                                частота встречаемости
-    """
+"""
 
 
 @app.route("/get_sudgest/<string>", methods=['GET', 'POST'])
 def return_sudgest(string):
     top = prefix_tree.get_n_sag(string, 10)
-    for i in range(len(top)):
-        top[i] = [top[i][0], top[i][2]]
-
     if request.method == "GET":
         return jsonify(top)
+        # ПЕРЕДЕЛАТЬ RETURN
 
     # TODO по запросу string вернуть json, c топ-10 саджестами, и значениями из нод
 
